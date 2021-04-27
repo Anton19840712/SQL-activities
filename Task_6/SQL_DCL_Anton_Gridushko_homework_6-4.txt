@@ -1,0 +1,56 @@
+4. Prepare answers to the following questions:
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+• How can one restrict access to certain columns of a database table?
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+simply, for example: grant select (empno, ename, address) on employee to admin;
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+• What is the difference between user identification and user authentication?
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+Identification is a procedure for recognizing a subject by his identifier (in other words, it is the definition of a name, login or number).
+In order to prevent unauthorized access to the system and data, identification alone is not enough, therefore, 
+authentication is used, and recently, the issue of two-factor authentication has become increasingly relevant. 
+The use of one or another characteristic in the system depends on the required reliability, security and implementation cost.
+Authentication refers to the verification of the identity of an identifier or person (object or subject). 
+For this, there are three main authentication factors:
+knowledge (what only we know) - password, PIN, pattern, etc .;
+possession (what only we have) - a mobile device, smart card, key, etc .;
+properties (what is our integral part) - biometric parameters (fingerprints and palms, voice, retina, etc.).
+
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+• What are the recommended authorization protocols for PostgreSQL?
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+I am not sure, but there are different methods of autnetication in PostgreSQL and one of them has protocol of
+authorization, that is not intended. It is ident authorization protocol from ident authentication method.
+All the others protocols from methods of authentication, such as GSSAPI, that is used in GSSAPI authentication method, for instance,
+could be used as recommended authorization protocols. 
+The method scram-sha-256 performs SCRAM-SHA-256 authentication, as described in RFC 7677. It is a challenge-response scheme that prevents password sniffing on untrusted connections and supports storing passwords on the server in a cryptographically hashed form that is thought to be secure.
+This is the most secure of the currently provided methods, but it is not supported by older client libraries.
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+• 
+What is proxy authentication in PostgreSQL and what is it for? 
+Why does it make the previously discussed role-based access control easier to implement?
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+I do not know how much it simplifies, but it definitely allows you 
+to build rules for accessing various business users to database objects.
+A proxy, not necessarily in postgresql, means that we log in under one role, and then through, 
+for example, set role or set session we become another role with different privileges.
+The usual solution is to authenticate the user within the web app, 
+then issue a SET ROLE or SET SESSION AUTHORIZATION 
+to "become" the user on a JDBC session that''s already 
+authenticated with the database using a fixed username.
+The first step is to create roles and assign role memberships and privileges.
+The database’s role system can also be used to partially 
+implement this logic by delegating the authentication 
+to another role after the connection is established or 
+reused, using the SET SESSION AUTHORIZATION statement or SET ROLE 
+command in a transaction block, as follows.
+The SET ROLE requires a role membership, while SET SESSION AUTHORIZATION requires 
+superuser privileges. Allowing an application to connect as
+a superuser is dangerous because the SET SESSION AUTHORIZATION and SET 
+ROLE commands can be reset using the RESET ROLE and RESET SESSION 
+commands, respectively, thereby allowing the application to gain superuser privileges.
+
+
+
+
+

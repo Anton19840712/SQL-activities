@@ -1,0 +1,38 @@
+--1. Top-3 most selling movie categories of all time and total dvd rental income for each category. 
+--Only consider dvd rental customers from the USA.
+
+
+SELECT c3."name", sum(p2.amount) AS SUMBYCATEGORY
+FROM customer c
+JOIN address a ON a.address_id = c.address_id
+JOIN city ci ON ci.city_id = a.city_id
+JOIN country c2 ON ci.country_id = c2.country_id
+JOIN payment p2 ON p2.customer_id = c.customer_id
+JOIN rental r ON r.rental_id = p2.rental_id
+JOIN inventory i2 ON r.inventory_id = i2.inventory_id
+JOIN film f ON f.film_id = i2.film_id
+JOIN film_category fc ON fc.film_id = f.film_id
+JOIN category c3 ON c3.category_id = fc.category_id
+WHERE c2.country = 'United States'
+GROUP BY c3."name"
+ORDER BY SUMBYCATEGORY DESC
+LIMIT 3;
+
+
+
+--2. For each client, display a list of horrors that he had ever rented (in one column, separated by
+--commas), and the amount of money that he paid for it
+
+SELECT c.customer_id,
+	 f.title,
+	 SUM(p.amount)
+FROM customer c
+JOIN rental r ON c.customer_id = r.customer_id
+JOIN payment p ON r.rental_id = p.rental_id
+JOIN inventory i ON r.inventory_id = i.inventory_id
+JOIN film f ON i.film_id = f.film_id
+JOIN film_category fc ON f.film_id = fc.film_id
+JOIN category cat ON cat.category_id = fc.category_id
+WHERE cat."name" = 'Horror'
+GROUP BY c.customer_id, f.title,cat."name"
+ORDER BY c.customer_id;

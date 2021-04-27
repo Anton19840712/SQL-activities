@@ -1,0 +1,18 @@
+--1 Task
+CREATE OR REPLACE FUNCTION insertNewMovie(i_title TEXT , i_release_year YEAR DEFAULT EXTRACT (YEAR FROM current_date), i_language INT DEFAULT 7)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+newFilmId INT;
+BEGIN
+	INSERT INTO film (title, release_year, language_id)
+	VALUES (i_title, i_release_year, i_language)
+RETURNING film_id INTO newFilmId;
+RAISE NOTICE 'New film with title %, release year %, ID %, language id % added', i_title, i_release_year, i_language, newFilmId;
+RETURN newFilmId;
+END;
+$$;
+--test
+--SELECT insertNewMovie('AntonFilm333er');
+--SELECT * FROM film ORDER BY film_id desc;

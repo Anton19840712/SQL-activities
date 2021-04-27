@@ -1,0 +1,55 @@
+3. Read about row-level security (https://www.postgresql.org/docs/12/ddl-rowsecurity.html) and configure it for your database, so that the
+customer can only access his own data in "rental" and "payment" tables (verify using the personalized role you previously created).
+
+--my_assets/auxiliary expressions
+--DROP POLICY cus_rls_policy ON customer;
+--DROP POLICY ren_rls_policy ON rental;
+--DROP POLICY pay_rls_policy ON payment;
+--select current_user;
+--\c dvdrental postgres
+--\c dvdrental maria
+
+CREATE USER maria with password '13';
+
+GRANT client_MARIA_MILLER TO maria;
+
+--CREATE POLICY cus_rls_policy ON customer FOR ALL TO PUBLIC USING (first_name = UPPER(current_user)) WITH CHECK (customer_id = 7);
+
+CREATE POLICY cus_rls_policy ON customer FOR ALL TO PUBLIC USING (first_name = UPPER(current_user) AND (customer_id = 7));
+
+CREATE POLICY ren_rls_policy ON rental FOR ALL TO PUBLIC USING (customer_id = 7);
+
+CREATE POLICY pay_rls_policy ON payment FOR ALL TO PUBLIC USING (customer_id = (select customer_id from customer where first_name = upper(current_user) and last_name =upper('miller')));
+
+ALTER TABLE customer ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE rental ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE payment ENABLE ROW LEVEL SECURITY;
+
+\c dvdrental maria
+
+--show1
+select * from customer;
+
+--show2
+SELECT 
+	c.customer_id, 
+	c.first_name, 
+	c.last_name, 
+	p.payment_id, 
+	p.payment_id, 
+	r.rental_id, 
+	r.rental_date
+FROM 
+	customer c
+JOIN 
+	payment p ON c.customer_id = p.customer_id
+JOIN 
+	rental r ON r.customer_id = p.customer_id
+WHERE 
+	c.customer_id = (select customer_id from customer where first_name = upper(current_user) and last_name =upper('miller'))
+GROUP BY 
+	c.customer_id, 
+	p.payment_id, 
+	r.rental_id;

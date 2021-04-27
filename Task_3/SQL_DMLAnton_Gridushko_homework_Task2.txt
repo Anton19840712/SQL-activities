@@ -1,0 +1,10 @@
+operation_name | table_space after_operation     | time_execution |
+-------------------------------------------------------------------
+create	       |                  574 MB	 |        19s     | 
+delete	       |                  574 MB	 |        16s     |
+vacuum	       |                  383 MB	 |        12s     |  
+truncate       |                  0 bytes	 |        1s      |
+-------------------------------------------------------------------
+
+
+

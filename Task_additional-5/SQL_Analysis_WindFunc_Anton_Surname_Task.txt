@@ -1,0 +1,47 @@
+--task1
+--
+-- Could you formulate the question more clearly?
+-- What do you have in mind?
+-- Amount or quantity?, or should I guess and demonstrate my soft skills at 22:00, asking what is at stake?
+-- Vety fun.
+-- Please, write more clearly what you want to receive in your request.
+-- The fact is that I'm not completely sure what is wanted in this assignment... So I parsed the request this way and that...
+-- After all this waste of time, I will not have time to make changes to this query. Thanks.
+
+WITH initial_t as(
+SELECT 
+ch.channel_desc, c.country_region_id, c.country_region, sum(s.quantity_sold) AS quantity, sum(s.amount_sold) AS amount
+FROM countries c
+JOIN customers cus ON c.country_id = cus.country_id
+JOIN sales s ON s.cust_id = cus.cust_id
+JOIN channels ch ON ch.channel_id = s.channel_id
+GROUP BY c.country_region_id, ch.channel_desc, c.country_region
+ORDER BY sum(s.quantity_sold), c.country_region)
+SELECT
+channel_desc,
+country_region, 
+quantity AS "quantity per country region by channel",
+amount AS "amount per country region",
+max(quantity) OVER (PARTITION BY country_region_id) AS maxQuantityForRegion,
+sum(quantity) OVER (PARTITION BY channel_desc) AS sumQuantityForRegion,
+round(sum(amount) OVER (PARTITION BY channel_desc),2) AS sumAmountForRegion,
+LPAD(round(quantity/sum(quantity) OVER (PARTITION BY country_region_id),2)|| ' %    ' ,20, ' ') AS "SALES QUANTITY %",
+LPAD(round(amount/sum(amount) OVER (PARTITION BY channel_desc),2)|| ' %    ' ,20, ' ') AS "SALES AMOUNT%"
+FROM initial_t ORDER BY channel_desc, quantity desc;
+
+--task2
+WITH initial_t AS (
+SELECT p.prod_subcategory,
+       SUM(s.amount_sold) FILTER (WHERE EXTRACT(YEAR FROM s.time_id) = 1998) as sales_1998,
+       SUM(s.amount_sold) FILTER (WHERE EXTRACT(YEAR FROM s.time_id) = 1999) as sales_1999,
+       SUM(s.amount_sold) FILTER (WHERE EXTRACT(YEAR FROM s.time_id) = 2000) as sales_2000,
+       SUM(s.amount_sold) FILTER (WHERE EXTRACT(YEAR FROM s.time_id) = 2001) as sales_2001
+FROM sales s JOIN
+     products p
+     ON p.prod_id = s.prod_id
+WHERE EXTRACT (YEAR FROM s.time_id) IN (1998,1999,2000,2001)
+GROUP BY p.prod_subcategory)
+SELECT prod_subcategory FROM initial_t
+WHERE sales_2001>sales_2000
+AND sales_2000>sales_1999
+AND sales_1999>sales_1998;

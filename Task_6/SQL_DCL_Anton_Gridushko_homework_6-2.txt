@@ -1,0 +1,61 @@
+--2. Implement role-based authentication model for dvd_rental database:
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+--• Create group roles:
+--DB developer, 
+--backend tester (read-only), 
+--customer (read-only for film and actor)
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+CREATE ROLE developer;
+CREATE ROLE tester;
+CREATE ROLE customer;
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+--• Create personalized role for any customer already existing in the dvd_rental database. 
+--• Role name must be client_{first_name}_{last_name}(omit curly brackets).
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+CREATE ROLE client_MARIA_MILLER;
+
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+--• Customer's payment and rental history must not be empty.
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+--May be, I can show check-result as a query-variant to proove, that customer''s payment and rental history is not empty, may be, there is another way to show this fact
+--But I prefer this one, I think it''s more clearly, among all the others.
+
+SELECT 
+	c.customer_id, 
+	c.first_name, 
+	c.last_name, 
+	p.payment_id, 
+	p.payment_id, 
+	r.rental_id, 
+	r.rental_date
+FROM 
+	customer c
+JOIN 
+	payment p ON c.customer_id = p.customer_id
+JOIN 
+	rental r ON r.customer_id = p.customer_id
+WHERE 
+	c.customer_id = 7
+GROUP BY 
+	c.customer_id, 
+	p.payment_id, 
+	r.rental_id;
+	
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+--• Assign proper privileges to each role.
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+--\du
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO tester;
+GRANT SELECT ON TABLE film TO customer;
+GRANT SELECT ON TABLE actor TO customer;
+GRANT SELECT ON TABLE rental, payment, customer TO client_MARIA_MILLER;
+
+--subtask↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+--• Verify that all roles are working as intended.
+--decision↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+SELECT * FROM information_schema.table_privileges;
+SELECT * FROM information_schema.table_privileges 
+WHERE information_schema.table_privileges.grantee 
+IN ('developer','tester','customer', lower('client_MARIA_MILLER'));
+--names should be used as lower-cased only, as far as I could understood, 
+--compiler settings are case-sensitive and case-sensitive to Upper/lower aspect while quering output results...

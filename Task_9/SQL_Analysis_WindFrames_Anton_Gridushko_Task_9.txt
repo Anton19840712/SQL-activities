@@ -1,0 +1,105 @@
+-- Analyze annual sales by channels and regions. Build the query to generate the same report:
+-- Conditions: • country_region: 'Americas', 'Asia', 'Europe' • calendar_year: 1999, 2000, 2001 • ordering: country_region ASC, calendar_year ASC, channel_descASC
+-- Columns description:
+-- AMOUNT_SOLD – amount sales for channel
+-- % BY CHANNELS – percentage of sales for the channel (e.g. 100% - total sales for Americas in 1999, 63.64% - percentage of sales for the channel “Direct Sales”)
+-- % PREVIOUS PERIOD – the same value as in the % BY CHANNELS column, but for the previous year
+-- % DIFF – difference between % BY CHANNELS and % PREVIOUS PERIOD
+with initial_table as
+(
+    SELECT 
+    DISTINCT ctr.country_region, EXTRACT (YEAR FROM s.time_id)::int AS calendar_year, chn.channel_desc, 
+    SUM(s.amount_sold) OVER (PARTITION BY ctr.country_region||chn.channel_desc||EXTRACT (YEAR FROM s.time_id)) AS amount_sold
+    FROM sales s
+    JOIN channels chn ON s.channel_id = chn.channel_id
+    JOIN customers c ON s.cust_id  = c.cust_id
+    JOIN countries ctr ON c.country_id = ctr.country_id
+    WHERE ctr.country_region IN ('Americas','Asia', 'Europe')
+    AND
+    EXTRACT (YEAR FROM s.time_id)::int IN (1998, 1999, 2000, 2001)
+    ORDER BY ctr.country_region, calendar_year, chn.channel_desc
+)
+,second_table as
+(
+    SELECT country_region, calendar_year, channel_desc, amount_sold,
+    (amount_sold/SUM(amount_sold) OVER (PARTITION BY country_region||calendar_year)*100)::decimal(10,2) AS bychannels
+    FROM initial_table
+)
+,third_table as
+(
+    SELECT *,
+    LAG (bychannels, 4) OVER (ORDER BY 6) AS lower_salary
+    FROM second_table--correct here smth wrong
+)
+,fourth_table as
+(
+    SELECT *, bychannels - lower_salary AS diff FROM third_table
+)
+SELECT country_region, calendar_year, channel_desc, 
+--'FM     999,999,999,990D'
+LPAD(to_char(amount_sold, 'FM999,999,999,990 $'),20, ' ') AS amount_sold,
+LPAD(bychannels || ' %' ,20, ' ') AS "% BY CHANNELS",
+LPAD(lower_salary || ' %    ' ,20, ' ') AS "% PREVIOUS PERIOD", 
+diff AS "% DIFF"
+FROM fourth_table WHERE calendar_year NOT IN (1998);
+
+-- TASK 2
+-- Build the query to generate a sales report for the 49th, 50th and 51st weeks of 1999. Add column CUM_SUM for accumulated amounts within weeks. For each day, display the average sales for the previous, current and next days (centered moving average, CENTERED_3_DAY_AVG column). For Monday, calculate average weekend sales + Monday + Tuesday. For Friday, calculate the average sales for Thursday + Friday + weekends.
+WITH second_table AS(
+WITH initial_table AS(
+SELECT 
+t.calendar_week_number, 
+t.time_id, 
+t.day_name,
+sum(s.amount_sold) AS amount_sold
+FROM 
+times t
+JOIN 
+sales s ON t.time_id = s.time_id
+WHERE t.calendar_week_number IN (49,50,51) AND EXTRACT (YEAR FROM s.time_id) = 1999
+GROUP BY t.calendar_week_number, t.time_id, t.day_name)
+SELECT *,
+SUM (amount_sold) OVER (ORDER BY calendar_week_number ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cum_sum
+FROM initial_table
+ORDER BY time_id
+)
+SELECT *,
+CASE 	WHEN day_name = 'Monday' THEN AVG (amount_sold) OVER (ROWS BETWEEN 2 PRECEDING AND 1 FOLLOWING) :: decimal(8,2)
+		WHEN day_name = 'Friday' THEN AVG (amount_sold) OVER (ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING) :: decimal(8,2)
+     	ELSE AVG(amount_sold) OVER (ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) :: decimal(8,2) END AS centered_3_day_avg
+FROM second_table ORDER BY time_id;
+-- TASK 3
+-- Prepare3 examples of using window functions with a frame clause (RANGE, ROWS, and GROUPS modes)
+-- Explain why you used a particulartype of frame in each example. It can be one query or 3 separate queries.
+-- Present the result as a singlesqlfile(name of the sqlfile should be SQL_Analysis_WindFrames_Name_Surname_homework).
+-- Please add comments why you chose a particularway to solve each tasks.
+-- Please, do not customizethe solution to the answer(screenshots)
+
+select p.prod_category, t.calendar_week_number, sum(amount_sold) as m_sales,
+first_value(sum(amount_sold)) over (order by t.calendar_week_number rows BETWEEN 1 preceding and current row) as rows_first_value,--
+first_value(sum(amount_sold)) over (order by t.calendar_week_number groups BETWEEN 1 preceding and current row) as groups_first_value,--
+first_value(sum(amount_sold)) over (order by t.calendar_week_number	range BETWEEN 1 preceding and current row) as range_first_value--
+from sh.sales s
+	join sh.products p ON p.prod_id = s.prod_id
+	join sh.times t on t.time_id = s.time_id
+	join sh.channels ch on ch.channel_id = s.channel_id
+where 
+p.prod_category IN ('Software/Other', 'Peripherals and Accessories')
+and
+ch.channel_desc in ('Tele Sales')
+group by t.calendar_week_number, t.calendar_year, p.prod_category;
+
+
+-- Here I used an example of three frame modes working by product categories.
+
+-- In the first case, I used rows because I wanted to show the behavior of the rows mode relative to each row of the m_sales sum.
+-- The syntax for chaining first_value / current in this situation is similar to that of the lag function. 
+-- If we want to show the offset or difference from the previous month value, I can use this syntax also.
+
+-- In the second case, groups, because I wanted to show how the groups mode works with respect to each first line of a group included in a slot or frame:
+-- the group by week number will not be recalculated until the conditional group change state is triggered. 
+-- As soon as the group changes - the procedure tightens the first value of the series of the sum, of the previous group, from which the frame left.
+-- 
+-- In the third case, using the range mode - as soon as the group changes, the first value of the series of the sum, the previous group, 
+-- from which the frame left, is taken immediately. It is convenient to show here the total amount 
+-- for the categories of goods included in a single group, but not a slot.

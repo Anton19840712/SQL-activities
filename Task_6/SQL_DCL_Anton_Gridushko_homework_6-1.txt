@@ -1,0 +1,12 @@
+TASK
+1. Figure out what security precautions are already used in your 'dvd_rental' database; -- send description
+
+A: Authentication
+B: Role-based access control(
+pg_execute_server_program, pg_monitor, 
+pg_read_all_settings, pg_read_all_stats, 
+pg_read_server_files, pg_signal_backend, 
+pg_stat_scan_tables,pg_write_server_files,
+postgres)
+C: Encryption(Access methods: hash)
+D: Auditing (Sesion manager, Lock manager)

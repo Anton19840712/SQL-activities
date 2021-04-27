@@ -1,0 +1,25 @@
+The Politics database shows some of the current geopolitical, political, social, psychological, contexts of a political campaign as revolutionary.
+
+It contains 11 tables and displays the following databases with relationships between them:
+
+1 countries_by_military_block - classifies countries by belonging to a certain military geopolitical block
+2 countries_by_population - contains data on the population in a particular country and Belarus in particular, refers to the country table
+3 country_capital_names - contains capitals of countries, refers to the country table
+4 country_leaders - contains the fields of the name and surname of the current ruler of the country, the year of his birth and election, refers to the country table
+5 country_names - contains country names
+6 person_basic_info, refers to the country table, one political activist can have several citizenships, one country can have several people participating in a political campaign. Many-to-many relationships are used here.
+7 person_features - traits of an individual that make her commit a political campaign
+8 political_indicators - indicators of development, freedom, potentially provoking a particular campaign.
+9 political_revolution_campaigns - represents data characterizing an individual revolutionary campaign in the state
+10 political_revolution_reasons - contains the reasons for the revolution in a particular country, refers to the table of political campaigns, a particular country may have several reasons for conducting a revolutionary political campaign, as well as the reason may have several countries for conducting a revolutionary political campaign. Many-to-many relationships are used here.
+11 political_views - contains options for the political views of an individual
+
+
+The sequence of the task was:
+Search for data to fill a table with potential topics for further analytics via google
+Generate some data using different .net tools and packages.
+
+1 Analyzed the subject area
+2 Analyzed from which information objects should be a database, what attributes
+every object described.
+3 Defined the structure of relational tables indicating the properties of fields and relationships between tables.
