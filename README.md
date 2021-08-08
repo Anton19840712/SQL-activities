@@ -7,6 +7,8 @@
 
 ## Key Features
 
+Here I store my different sql tasks from different tutorials, labs, different internal company tests and my own notes also.
+
 ## How To Use
 Just download and read)
 

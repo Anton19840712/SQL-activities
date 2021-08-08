@@ -1,0 +1,1 @@
+select EmployeeID from Employees where HireDate < (select MAX(HireDate) from Employees) order by HireDate desc OFFSET (0) ROWS FETCH NEXT (1) ROWS ONLY
